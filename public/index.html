@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f766e" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>Valijapp</title>
+<style>
+  :root{
+    --bg:#0b1220; --card:#121b2e; --card2:#0f1828; --line:#22304a;
+    --txt:#e8eef7; --muted:#92a3bd; --accent:#14b8a6; --accent2:#0ea5e9;
+    --warn:#f59e0b; --ok:#22c55e; --pill:#1b2740; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#13233f 0%,var(--bg) 60%);
+    color:var(--txt); min-height:100vh; -webkit-tap-highlight-color:transparent;
+  }
+  .app{max-width:560px;margin:0 auto;padding:16px 16px 110px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px 14px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.2px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:18px}
+  .acct{display:flex;align-items:center;gap:8px}
+  .btn{border:0;cursor:pointer;font:inherit;font-weight:700;border-radius:12px;padding:12px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;transition:transform .06s ease,filter .2s}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--pill);color:var(--txt);border:1px solid var(--line)}
+  .btn.sm{padding:8px 12px;font-size:13px;border-radius:10px}
+  .btn.block{width:100%}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+  h1{font-size:22px;margin:.2em 0 .3em}
+  h2{font-size:17px;margin:.1em 0 .6em}
+  p.sub{color:var(--muted);margin:.2em 0 1em;line-height:1.45}
+  .muted{color:var(--muted)}
+  .progress{height:8px;border-radius:99px;background:var(--pill);overflow:hidden;margin:4px 0 18px}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .3s}
+  .opts{display:grid;gap:10px}
+  .opt{display:flex;gap:12px;align-items:center;border:1px solid var(--line);background:var(--pill);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s,background .15s}
+  .opt:hover{border-color:#33476b}
+  .opt .ic{font-size:22px;width:30px;text-align:center}
+  .opt .tx b{display:block}
+  .opt .tx small{color:var(--muted)}
+  .opt.sel{border-color:var(--accent);background:linear-gradient(135deg,rgba(20,184,166,.18),rgba(14,165,233,.14))}
+  .opt .check{margin-left:auto;width:22px;height:22px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-size:13px;color:transparent}
+  .opt.sel .check{border-color:var(--accent);background:var(--accent);color:#04121a}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .field{margin:10px 0}
+  label.lbl{display:block;font-weight:700;margin-bottom:6px}
+  input[type=text],input[type=number],input[type=date],select{
+    width:100%;background:var(--pill);border:1px solid var(--line);border-radius:12px;color:var(--txt);
+    padding:13px 14px;font:inherit;outline:none
+  }
+  input:focus,select:focus{border-color:var(--accent)}
+  .stepper{display:flex;align-items:center;gap:12px;justify-content:center;margin:8px 0}
+  .stepper button{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--pill);color:var(--txt);font-size:22px;font-weight:800;cursor:pointer}
+  .stepper .val{font-size:34px;font-weight:800;min-width:70px;text-align:center}
+  .nav{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(11,18,32,0),var(--bg) 30%);padding:14px 16px 20px}
+  .nav .inner{max-width:560px;margin:0 auto;display:flex;gap:10px}
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chip{padding:9px 12px;border-radius:99px;background:var(--pill);border:1px solid var(--line);cursor:pointer;font-size:14px}
+  .chip.sel{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;border-color:transparent;font-weight:700}
+  .weatherbox{display:flex;gap:12px;align-items:center;background:var(--pill);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+  .weatherbox .t{font-size:30px}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;background:var(--pill);padding:6px;border-radius:14px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;padding:10px;border-radius:10px;cursor:pointer}
+  .tabs button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a}
+  .cat{margin-bottom:18px}
+  .cat h3{display:flex;align-items:center;gap:8px;font-size:15px;margin:0 0 8px;color:var(--accent)}
+  .item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid rgba(34,48,74,.5)}
+  .item:last-child{border-bottom:0}
+  .item .box{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;cursor:pointer;flex:0 0 auto;font-size:14px;color:transparent}
+  .item.done .box{background:var(--ok);border-color:var(--ok);color:#04121a}
+  .item.done .name{text-decoration:line-through;color:var(--muted)}
+  .item .name{flex:1}
+  .item .qty{background:var(--pill);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:13px;font-weight:700;color:var(--accent)}
+  .item .why{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .day{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--card2)}
+  .day .dh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .day .dh b{font-size:16px}
+  .day .badge{font-size:12px;background:var(--pill);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+  .slot{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+  .slot .si{font-size:20px;width:26px;text-align:center}
+  .slot .sc b{display:block;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .slot .sc span{line-height:1.4}
+  .summary{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
+  .summary .s{background:var(--pill);border:1px solid var(--line);border-radius:99px;padding:6px 11px;font-size:13px}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#08304a;border:1px solid var(--accent2);color:#dff5ff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:50}
+  .toast.show{opacity:1}
+  .center{text-align:center}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:18px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .trips{display:grid;gap:10px}
+  .trip{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:var(--pill);border-radius:14px;padding:14px;cursor:pointer}
+  .trip .ti{font-size:24px}
+  .trip .meta small{color:var(--muted)}
+  .del{margin-left:auto;color:var(--muted);background:transparent;border:0;font-size:18px;cursor:pointer}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap}
+  a.link{color:var(--accent2);text-decoration:none}
+  .hidden{display:none!important}
+  .ringwrap{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+  .ring{--p:0;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--pill) 0);display:grid;place-items:center;flex:0 0 auto}
+  .ring i{width:50px;height:50px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-weight:800;font-style:normal;font-size:15px}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<div class="nav hidden" id="nav"><div class="inner" id="navInner"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   ARMÁ LA VALIJA — PWA
+   Vanilla JS. Guarda en localStorage. Clima via Open-Meteo (sin clave).
+   Login Google: ver bloque CONFIG (Firebase) más abajo, listo para activar.
+   ========================================================================= */
+
+/* ---------- CONFIG (Firebase / Login Google — opcional) ----------
+   Para activar el login con Google y guardado en la nube:
+   1) Crear proyecto en https://console.firebase.google.com
+   2) Authentication → Sign-in method → activar Google
+   3) Firestore Database → crear en modo producción
+   4) Project settings → tu app web → copiar el firebaseConfig acá abajo
+   5) Hostear la app (Firebase Hosting es gratis) y agregar el dominio en
+      Authentication → Settings → Authorized domains.
+   Si FIREBASE_CONFIG queda null, la app funciona 100% en modo local. */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC5filCnUwIjY-YMp56Ou8NXvCa93EkwYQ",
+  authDomain: "valijapp-96162.firebaseapp.com",
+  projectId: "valijapp-96162",
+  storageBucket: "valijapp-96162.firebasestorage.app",
+  messagingSenderId: "880490681935",
+  appId: "1:880490681935:web:7f86fa8868dba1eb1bbc3a",
+  measurementId: "G-D9JN6QT4LB"
+};
+
+/* ---------- ESTADO ---------- */
+const LS_KEY = 'armaValija.v1';
+let DB = loadDB();
+let cfg = null;       // configuración del viaje en edición
+let stepIdx = 0;      // paso actual del wizard
+let resultTab = 'lista';
+
+function loadDB(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || base(); }
+  catch(e){ return base(); }
+  function base(){ return { trips:[], user:null }; }
+}
+function saveDB(){ localStorage.setItem(LS_KEY, JSON.stringify(DB)); cloudSync(); }
+
+function newConfig(){
+  return {
+    id:'t'+Date.now(),
+    nombre:'',
+    tipos:[],                 // playa, nieve, ciudad, naturaleza, turismo
+    dias:5,
+    fechaInicio:'',
+    ropaInterior:'diario',    // diario | diaPorMedio | menos
+    deporte:'no',             // no | poco | medio | mucho
+    motivo:'ocio',            // ocio | trabajo | ambos
+    salidas:'findes',         // no | findes | varias
+    equipaje:'carryon',       // carryon | mochila | valija | combo
+    ciudad:'',
+    clima:null,               // {min,max,lluvia,dias:[{date,min,max,rain,code}],source}
+    accesorios:[],
+    documentos:['DNI/Pasaporte','Tarjetas','Pasajes / reservas'],
+    checks:{},                // marcado de la lista
+    creado:Date.now()
+  };
+}
+
+/* ---------- HELPERS UI ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; return e;};
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800); }
+const cap = s => s? s[0].toUpperCase()+s.slice(1):s;
+
+/* ====================================================================
+   WIZARD: definición de pasos
+   ==================================================================== */
+const TIPOS = [
+  {k:'playa', ic:'🏖️', t:'Playa', s:'Sol, arena y agua'},
+  {k:'nieve', ic:'🏔️', t:'Nieve', s:'Frío, ski o montaña'},
+  {k:'ciudad', ic:'🏙️', t:'Ciudad', s:'Urbano, caminar'},
+  {k:'naturaleza', ic:'🥾', t:'Naturaleza', s:'Trekking, camping'},
+  {k:'turismo', ic:'📸', t:'Turismo', s:'Paseos y visitas'},
+];
+const ACCESORIOS = [
+  {k:'Gorra/sombrero',ic:'🧢'},{k:'Lentes de sol',ic:'🕶️'},{k:'Libro',ic:'📖'},
+  {k:'Mate',ic:'🧉'},{k:'Termo',ic:'🫙'},{k:'Yerba',ic:'🌿'},{k:'Auriculares',ic:'🎧'},
+  {k:'Cargador / power bank',ic:'🔌'},{k:'Paraguas',ic:'☂️'},{k:'Botella de agua',ic:'💧'},
+  {k:'Adaptador de enchufe',ic:'🔋'},{k:'Cámara de fotos',ic:'📷'},{k:'Bolsa para ropa sucia',ic:'🧺'},
+  {k:'Candado',ic:'🔒'},{k:'Botiquín / remedios',ic:'💊'},
+];
+const DOCS = ['DNI/Pasaporte','Tarjetas','Pasajes / reservas','Seguro de viaje','Licencia de conducir','Efectivo / cambio','Vacunas / certificados'];
+
+const steps = [
+  stepTipos, stepDias, stepRopaInterior, stepDeporte, stepMotivo,
+  stepSalidas, stepEquipaje, stepDestino, stepAccesorios, stepDocs
+];
+
+/* ====================================================================
+   RENDER PRINCIPAL
+   ==================================================================== */
+function render(){
+  const app = $('#app');
+  app.innerHTML = '';
+  app.appendChild(headerEl());
+  if(!cfg){ renderHome(app); $('#nav').classList.add('hidden'); return; }
+  if(cfg._result){ renderResult(app); return; }
+  renderWizard(app);
+}
+
+function headerEl(){
+  const h = el('header','top');
+  const brand = el('div','brand');
+  brand.innerHTML = '<span class="logo">🧳</span><span>Valijapp</span>';
+  brand.style.cursor='pointer';
+  brand.onclick=()=>{ cfg=null; render(); };
+  const acct = el('div','acct');
+  if(DB.user){
+    acct.innerHTML = `<small class="muted">${DB.user.name||DB.user.email}</small>`;
+    const b=el('button','btn ghost sm'); b.textContent='Salir'; b.onclick=signOut; acct.appendChild(b);
+  } else {
+    const b=el('button','btn ghost sm'); b.textContent='Entrar con Google'; b.onclick=signIn; acct.appendChild(b);
+  }
+  h.appendChild(brand); h.appendChild(acct);
+  return h;
+}
+
+/* ---------- HOME ---------- */
+function renderHome(app){
+  const c = el('div','card');
+  c.innerHTML = `<h1>¿A dónde vamos? 🧳</h1>
+    <p class="sub">Te hago unas preguntas rápidas y te armo la lista de equipaje + una simulación de qué ponerte cada día según el clima.</p>`;
+  const start = el('button','btn block'); start.textContent='＋ Armar una valija nueva';
+  start.onclick=()=>{ cfg=newConfig(); stepIdx=0; render(); };
+  c.appendChild(start);
+  app.appendChild(c);
+
+  if(DB.trips.length){
+    const c2 = el('div','card');
+    c2.innerHTML = '<h2>Tus viajes guardados</h2>';
+    const list = el('div','trips');
+    DB.trips.slice().reverse().forEach(t=>{
+      const row = el('div','trip');
+      const tipo = (t.tipos[0]&&TIPOS.find(x=>x.k===t.tipos[0]))||{ic:'🧳'};
+      const total = computeList(t).reduce((n,c)=>n+c.items.length,0);
+      const done = Object.values(t.checks||{}).filter(Boolean).length;
+      row.innerHTML = `<span class="ti">${tipo.ic}</span>
+        <div class="meta"><b>${t.nombre||t.ciudad||'Viaje'}</b><br>
+        <small>${t.dias} días · ${done}/${total} listo</small></div>`;
+      row.onclick=(e)=>{ if(e.target.classList.contains('del'))return; cfg=t; cfg._result=true; render(); };
+      const del = el('button','del'); del.textContent='🗑'; del.title='Borrar';
+      del.onclick=()=>{ DB.trips=DB.trips.filter(x=>x.id!==t.id); saveDB(); render(); };
+      row.appendChild(del);
+      list.appendChild(row);
+    });
+    c2.appendChild(list);
+    app.appendChild(c2);
+  }
+}
+
+/* ====================================================================
+   WIZARD RENDER + NAV
+   ==================================================================== */
+function renderWizard(app){
+  const c = el('div','card');
+  const prog = el('div','progress'); const bar=el('i'); bar.style.width=((stepIdx)/steps.length*100)+'%'; prog.appendChild(bar);
+  c.appendChild(prog);
+  const small=el('p','muted'); small.style.margin='0 0 10px'; small.style.fontSize='13px';
+  small.textContent=`Paso ${stepIdx+1} de ${steps.length}`;
+  c.appendChild(small);
+  steps[stepIdx](c);
+  app.appendChild(c);
+
+  // nav
+  const nav=$('#nav'); nav.classList.remove('hidden');
+  const inner=$('#navInner'); inner.innerHTML='';
+  const back=el('button','btn ghost'); back.textContent='Atrás'; back.style.flex='0 0 auto';
+  back.onclick=()=>{ if(stepIdx===0){ cfg=null; } else stepIdx--; render(); };
+  const next=el('button','btn block'); next.textContent= stepIdx===steps.length-1 ? '✨ Armar valija' : 'Siguiente';
+  next.onclick=()=>{ if(!validateStep()) return; if(stepIdx===steps.length-1){ finish(); } else { stepIdx++; render(); } };
+  inner.appendChild(back); inner.appendChild(next);
+}
+
+function validateStep(){
+  if(steps[stepIdx]===stepTipos && cfg.tipos.length===0){ toast('Elegí al menos un tipo de viaje'); return false; }
+  if(steps[stepIdx]===stepDestino && !cfg.ciudad.trim() && !cfg.clima){ toast('Escribí el destino (o cargá el clima a mano)'); return false; }
+  return true;
+}
+
+/* ---------- pasos ---------- */
+function stepTipos(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Qué tipo de viaje es?</h1><p class="sub">Podés elegir más de uno.</p>');
+  const opts=el('div','opts');
+  TIPOS.forEach(o=>{
+    const sel=cfg.tipos.includes(o.k);
+    const d=el('div','opt'+(sel?' sel':''));
+    d.innerHTML=`<span class="ic">${o.ic}</span><span class="tx"><b>${o.t}</b><small>${o.s}</small></span><span class="check">✓</span>`;
+    d.onclick=()=>{ if(cfg.tipos.includes(o.k)) cfg.tipos=cfg.tipos.filter(x=>x!==o.k); else cfg.tipos.push(o.k); render(); };
+    opts.appendChild(d);
+  });
+  c.appendChild(opts);
+}
+
+function stepDias(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Cuántos días?</h1><p class="sub">Contá los días que estás afuera.</p>');
+  const st=el('div','stepper');
+  const minus=el('button'); minus.textContent='−'; minus.onclick=()=>{ cfg.dias=Math.max(1,cfg.dias-1); render(); };
+  const val=el('div','val'); val.textContent=cfg.dias;
+  const plus=el('button'); plus.textContent='+'; plus.onclick=()=>{ cfg.dias=Math.min(60,cfg.dias+1); render(); };
+  st.appendChild(minus); st.appendChild(val); st.appendChild(plus);
+  c.appendChild(st);
+  const f=el('div','field');
+  f.innerHTML='<label class="lbl">Fecha de salida (opcional, mejora el clima)</label>';
+  const inp=el('input'); inp.type='date'; inp.value=cfg.fechaInicio;
+  inp.onchange=e=>cfg.fechaInicio=e.target.value;
+  f.appendChild(inp); c.appendChild(f);
+}
+
+function stepRopaInterior(c){
+  c.insertAdjacentHTML('beforeend','<h1>Ropa interior y medias</h1><p class="sub">¿Cuántas mudas querés llevar?</p>');
+  const opts=[
+    {k:'diario',ic:'🩲',t:'Una por día',s:'Sin lavar nada. Más volumen.'},
+    {k:'diaPorMedio',ic:'🧼',t:'Día por medio, lavando',s:'Llevás menos y vas lavando.'},
+    {k:'menos',ic:'🪶',t:'Lo mínimo',s:'Lavás seguido, valija liviana.'},
+  ];
+  c.appendChild(radioOpts(opts,'ropaInterior'));
+}
+
+function stepDeporte(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Vas a hacer deporte?</h1><p class="sub">Para sumar ropa deportiva y zapatillas.</p>');
+  const opts=[
+    {k:'no',ic:'🛋️',t:'No',s:'Nada de deporte'},
+    {k:'poco',ic:'🚶',t:'A veces',s:'1–2 veces en todo el viaje'},
+    {k:'medio',ic:'🏃',t:'Seguido',s:'Día por medio aprox.'},
+    {k:'mucho',ic:'🏋️',t:'Todos los días',s:'Rutina diaria'},
+  ];
+  c.appendChild(radioOpts(opts,'deporte'));
+}
+
+function stepMotivo(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Trabajo u ocio?</h1><p class="sub">Define si sumamos ropa más formal.</p>');
+  const opts=[
+    {k:'ocio',ic:'🌴',t:'Ocio',s:'Relax, vacaciones'},
+    {k:'trabajo',ic:'💼',t:'Trabajo',s:'Reuniones, oficina'},
+    {k:'ambos',ic:'🔀',t:'Las dos',s:'Mezcla de ambos'},
+  ];
+  c.appendChild(radioOpts(opts,'motivo'));
+}
+
+function stepSalidas(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Salidas de noche?</h1><p class="sub">Para sumar outfits de salida.</p>');
+  const opts=[
+    {k:'no',ic:'😴',t:'No',s:'Tranqui, a descansar'},
+    {k:'findes',ic:'🍸',t:'Solo los findes',s:'Viernes y sábados'},
+    {k:'varias',ic:'🎉',t:'Bastante',s:'Varias noches'},
+  ];
+  c.appendChild(radioOpts(opts,'salidas'));
+}
+
+function stepEquipaje(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Con qué viajás?</h1><p class="sub">Lo uso para avisarte si te estás pasando de espacio.</p>');
+  const opts=[
+    {k:'carryon',ic:'🎒',t:'Carry-on',s:'Cabina, ~8–10 kg'},
+    {k:'mochila',ic:'🥾',t:'Mochila',s:'Mochilero / minimal'},
+    {k:'valija',ic:'🧳',t:'Valija grande',s:'Bodega, hasta 23 kg'},
+    {k:'combo',ic:'🧳🎒',t:'Combinación',s:'Valija + bolso de mano'},
+  ];
+  c.appendChild(radioOpts(opts,'equipaje'));
+}
+
+function stepDestino(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿A dónde vas?</h1><p class="sub">Busco el clima real del destino (Open-Meteo).</p>');
+  const f=el('div','field');
+  const inp=el('input'); inp.type='text'; inp.placeholder='Ej: Bariloche, Río de Janeiro, Madrid…'; inp.value=cfg.ciudad;
+  inp.oninput=e=>cfg.ciudad=e.target.value;
+  f.appendChild(inp);
+  const btn=el('button','btn sm'); btn.style.marginTop='10px'; btn.textContent='🌤️ Buscar clima';
+  btn.onclick=()=>fetchWeather(c,btn);
+  f.appendChild(btn);
+  c.appendChild(f);
+  const box=el('div'); box.id='wbox'; c.appendChild(box);
+  if(cfg.clima) renderWeatherBox(box);
+
+  // fallback manual
+  const det=el('details'); det.style.marginTop='12px';
+  det.innerHTML='<summary class="muted" style="cursor:pointer">…o cargar el clima a mano</summary>';
+  const mg=el('div','grid2'); mg.style.marginTop='10px';
+  mg.innerHTML=`
+    <div><label class="lbl">Temp. mín °C</label><input id="mmin" type="number" value="${cfg.clima?cfg.clima.min:''}"></div>
+    <div><label class="lbl">Temp. máx °C</label><input id="mmax" type="number" value="${cfg.clima?cfg.clima.max:''}"></div>`;
+  det.appendChild(mg);
+  const rain=el('label','lbl'); rain.style.marginTop='10px';
+  rain.innerHTML=`<input id="mrain" type="checkbox" ${cfg.clima&&cfg.clima.lluvia?'checked':''}> Probable lluvia`;
+  det.appendChild(rain);
+  const apply=el('button','btn ghost sm'); apply.style.marginTop='10px'; apply.textContent='Usar clima manual';
+  apply.onclick=()=>{
+    const mn=parseFloat($('#mmin').value), mx=parseFloat($('#mmax').value);
+    if(isNaN(mn)||isNaN(mx)){ toast('Completá las temperaturas'); return; }
+    cfg.clima={min:mn,max:mx,lluvia:$('#mrain').checked,dias:null,source:'manual'};
+    render();
+  };
+  det.appendChild(apply);
+  c.appendChild(det);
+}
+
+function stepAccesorios(c){
+  c.insertAdjacentHTML('beforeend','<h1>Accesorios</h1><p class="sub">Tocá los que querés llevar.</p>');
+  const row=el('div','chiprow');
+  ACCESORIOS.forEach(a=>{
+    const sel=cfg.accesorios.includes(a.k);
+    const ch=el('div','chip'+(sel?' sel':'')); ch.textContent=`${a.ic} ${a.k}`;
+    ch.onclick=()=>{ if(cfg.accesorios.includes(a.k)) cfg.accesorios=cfg.accesorios.filter(x=>x!==a.k); else cfg.accesorios.push(a.k); render(); };
+    row.appendChild(ch);
+  });
+  c.appendChild(row);
+}
+
+function stepDocs(c){
+  c.insertAdjacentHTML('beforeend','<h1>Documentos y esenciales</h1><p class="sub">Lo que no te podés olvidar.</p>');
+  const row=el('div','chiprow');
+  DOCS.forEach(d=>{
+    const sel=cfg.documentos.includes(d);
+    const ch=el('div','chip'+(sel?' sel':'')); ch.textContent=d;
+    ch.onclick=()=>{ if(cfg.documentos.includes(d)) cfg.documentos=cfg.documentos.filter(x=>x!==d); else cfg.documentos.push(d); render(); };
+    row.appendChild(ch);
+  });
+  c.appendChild(row);
+  const f=el('div','field'); f.style.marginTop='14px';
+  f.innerHTML='<label class="lbl">Nombre del viaje (opcional)</label>';
+  const inp=el('input'); inp.type='text'; inp.placeholder='Ej: Verano en Brasil'; inp.value=cfg.nombre;
+  inp.oninput=e=>cfg.nombre=e.target.value;
+  f.appendChild(inp); c.appendChild(f);
+}
+
+function radioOpts(opts,key){
+  const wrap=el('div','opts');
+  opts.forEach(o=>{
+    const sel=cfg[key]===o.k;
+    const d=el('div','opt'+(sel?' sel':''));
+    d.innerHTML=`<span class="ic">${o.ic}</span><span class="tx"><b>${o.t}</b><small>${o.s}</small></span><span class="check">✓</span>`;
+    d.onclick=()=>{ cfg[key]=o.k; render(); };
+    wrap.appendChild(d);
+  });
+  return wrap;
+}
+
+/* ====================================================================
+   CLIMA — Open-Meteo (geocoding + forecast), sin API key
+   ==================================================================== */
+async function fetchWeather(container, btn){
+  const q=cfg.ciudad.trim();
+  if(!q){ toast('Escribí el destino'); return; }
+  btn.disabled=true; btn.textContent='Buscando…';
+  const box=$('#wbox',container); box.innerHTML='<div class="spin"></div>';
+  try{
+    const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=es`).then(r=>r.json());
+    if(!geo.results||!geo.results.length){ box.innerHTML='<p class="muted">No encontré ese lugar. Probá con otra ciudad o cargá el clima a mano.</p>'; throw 0; }
+    const g=geo.results[0];
+    cfg.ciudad = g.name + (g.country?', '+g.country:'');
+    // ¿forecast (≤16 días desde hoy) o promedios?
+    const start = cfg.fechaInicio ? new Date(cfg.fechaInicio) : new Date();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((start-today)/86400000);
+    let data;
+    if(diff>=0 && diff<=14){
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${g.latitude}&longitude=${g.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=16`;
+      const f=await fetch(url).then(r=>r.json());
+      const idx0=Math.max(0,diff);
+      const dias=[];
+      for(let i=0;i<cfg.dias && (idx0+i)<f.daily.time.length;i++){
+        const j=idx0+i;
+        dias.push({date:f.daily.time[j],max:f.daily.temperature_2m_max[j],min:f.daily.temperature_2m_min[j],rain:f.daily.precipitation_probability_max[j],code:f.daily.weather_code[j]});
+      }
+      data={dias};
+    } else {
+      // promedio climatológico del mes (Open-Meteo climate / archive del año pasado)
+      const m=(start.getMonth()+1);
+      const yr=today.getFullYear()-1;
+      const mm=String(m).padStart(2,'0');
+      const ld=new Date(yr,m,0).getDate();
+      const url=`https://archive-api.open-meteo.com/v1/archive?latitude=${g.latitude}&longitude=${g.longitude}&start_date=${yr}-${mm}-01&end_date=${yr}-${mm}-${ld}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+      const a=await fetch(url).then(r=>r.json());
+      const mx=avg(a.daily.temperature_2m_max), mn=avg(a.daily.temperature_2m_min);
+      const rainDays=a.daily.precipitation_sum.filter(x=>x>1).length;
+      data={dias:null, avgMax:mx, avgMin:mn, rainProb: Math.round(rainDays/a.daily.precipitation_sum.length*100)};
+    }
+    if(data.dias){
+      const maxs=data.dias.map(d=>d.max), mins=data.dias.map(d=>d.min);
+      cfg.clima={min:Math.round(Math.min(...mins)),max:Math.round(Math.max(...maxs)),
+        lluvia:data.dias.some(d=>d.rain>=50), dias:data.dias, source:'forecast', lugar:cfg.ciudad};
+    } else {
+      cfg.clima={min:Math.round(data.avgMin),max:Math.round(data.avgMax),
+        lluvia:data.rainProb>=40, dias:null, source:'promedio', lugar:cfg.ciudad};
+    }
+    render();
+  }catch(e){
+    btn.disabled=false; btn.textContent='🌤️ Buscar clima';
+  }
+}
+const avg = a => a.reduce((s,x)=>s+(x||0),0)/a.length;
+
+function wIcon(code){
+  if(code==null) return '🌡️';
+  if(code===0) return '☀️';
+  if(code<=2) return '🌤️';
+  if(code<=3) return '☁️';
+  if(code<=48) return '🌫️';
+  if(code<=67) return '🌧️';
+  if(code<=77) return '🌨️';
+  if(code<=82) return '🌦️';
+  if(code<=86) return '❄️';
+  return '⛈️';
+}
+function renderWeatherBox(box){
+  const w=cfg.clima; if(!w){box.innerHTML='';return;}
+  const ico = w.dias ? wIcon(w.dias[0].code) : (w.max>=24?'☀️':w.max>=14?'🌤️':'🥶');
+  const src = w.source==='forecast'?'pronóstico real':w.source==='promedio'?'promedio histórico del mes':'manual';
+  box.innerHTML=`<div class="weatherbox"><div class="t">${ico}</div>
+    <div><b>${w.lugar||cfg.ciudad}</b><br>
+    <span class="muted">${w.min}° / ${w.max}°C · ${w.lluvia?'posible lluvia 🌧️':'mayormente seco'}</span><br>
+    <small class="muted">Fuente: ${src}</small></div></div>`;
+}
+
+/* ====================================================================
+   LÓGICA DE ARMADO — calcula la lista según la config
+   ==================================================================== */
+function qtyByCycle(days,mode){
+  if(mode==='diario') return days;
+  if(mode==='diaPorMedio') return Math.min(days, Math.ceil(days/2)+1);
+  return Math.min(days, Math.ceil(days/3)+1); // menos
+}
+function tempBand(w){
+  if(!w) return 'templado';
+  const m=w.max;
+  if(m<8) return 'muyFrio';
+  if(m<15) return 'frio';
+  if(m<22) return 'templado';
+  if(m<28) return 'calido';
+  return 'caluroso';
+}
+function deporteSets(d,days){
+  if(d==='no') return 0;
+  if(d==='poco') return 1;
+  if(d==='medio') return Math.min(days, Math.ceil(days/2));
+  return Math.min(days, days); // mucho
+}
+
+function computeList(t){
+  const w=t.clima, band=tempBand(w), days=t.dias;
+  const has=k=>t.tipos.includes(k);
+  const laundry = t.ropaInterior!=='diario';
+  const cats={};
+  const add=(cat,name,qty,why)=>{ (cats[cat]=cats[cat]||[]).push({name,qty,why}); };
+
+  // ---- Básicos / ropa interior ----
+  const ri=qtyByCycle(days,t.ropaInterior);
+  add('Ropa interior','Ropa interior',ri, t.ropaInterior==='diario'?'una por día':'lavando en el viaje');
+  add('Ropa interior','Medias',Math.max(ri, has('naturaleza')||has('nieve')?ri+1:ri), 'incluye un par extra si camina mucho');
+  if(t.motivo!=='trabajo' && (has('playa')||band==='caluroso'||band==='calido'))
+    add('Ropa interior','Medias cortas / soquetes',Math.ceil(ri/2),'clima cálido');
+  add('Ropa interior','Pijama',days>4?2:1,'para dormir');
+
+  // ---- Parte superior ----
+  const topsBase = laundry ? qtyByCycle(days,'diaPorMedio')+1 : days; // remeras
+  add('Ropa','Remeras / tops',Math.max(2,topsBase), laundry?'lavando':'una por día aprox.');
+  if(band==='templado'||band==='frio'||band==='muyFrio'||has('nieve'))
+    add('Ropa','Remeras manga larga',Math.max(1,Math.ceil(days/3)),'para las capas / frío');
+  if(band!=='caluroso')
+    add('Ropa','Buzo / sweater',band==='muyFrio'||band==='frio'?2:1,'abrigo intermedio');
+
+  // ---- Parte inferior ----
+  if(band==='caluroso'||band==='calido'||has('playa')){
+    add('Ropa','Shorts / bermudas',Math.max(2,Math.ceil(days/3)),'clima cálido');
+  }
+  add('Ropa','Pantalones largos',Math.max(2,Math.ceil(days/4)), band==='muyFrio'||has('nieve')?'también para el frío':'para salir / fresco de noche');
+  if(t.motivo==='ocio' && (has('ciudad')||has('turismo')))
+    add('Ropa','Jean / pantalón casual',1,'versátil para todo');
+
+  // ---- Abrigo según clima ----
+  if(band==='muyFrio'||has('nieve')){
+    add('Abrigo','Campera abrigada / nieve',1,'frío fuerte');
+    add('Abrigo','Gorro de lana',1,'frío'); add('Abrigo','Guantes',1,'frío'); add('Abrigo','Bufanda / cuello',1,'frío');
+    add('Ropa','Primera piel / térmica',2,'capa base para el frío');
+  } else if(band==='frio'){
+    add('Abrigo','Campera / abrigo',1,'temperaturas bajas');
+  } else if(band==='templado'){
+    add('Abrigo','Campera liviana / rompevientos',1,'para la noche');
+  }
+  if((w&&w.lluvia)||has('naturaleza'))
+    add('Abrigo','Impermeable / piloto',1, w&&w.lluvia?'probable lluvia':'naturaleza');
+
+  // ---- Calzado ----
+  add('Calzado','Zapatillas cómodas',1,'para caminar');
+  if(has('playa')) add('Calzado','Ojotas / sandalias',1,'playa');
+  if(has('nieve')||has('naturaleza')) add('Calzado','Botas / borcegos',1,'terreno');
+  if(t.salidas!=='no'||t.motivo!=='ocio') add('Calzado','Calzado para salir / formal',1, t.motivo==='ocio'?'salidas':'trabajo');
+
+  // ---- Playa ----
+  if(has('playa')){
+    add('Playa','Malla / traje de baño',days>5?2:1,'playa/pileta');
+    add('Playa','Toalla de playa',1,'playa');
+    add('Playa','Protector solar',1,'sol');
+    add('Playa','Salida de baño / pareo',1,'comodidad');
+  }
+  // ---- Nieve extra ----
+  if(has('nieve')){
+    add('Nieve','Pantalón de nieve',1,'ski/montaña');
+    add('Nieve','Antiparras / lentes de nieve',1,'sol y nieve');
+    add('Nieve','Medias térmicas',2,'pies calientes');
+  }
+
+  // ---- Deporte ----
+  const ds=deporteSets(t.deporte,days);
+  if(ds>0){
+    add('Deporte','Conjunto deportivo',ds, t.deporte==='mucho'?'uso diario':t.deporte==='medio'?'seguido':'ocasional');
+    add('Deporte','Zapatillas deportivas',1,'entrenar');
+    add('Deporte','Medias deportivas',ds,'deporte');
+    if(has('playa')||band==='caluroso') add('Deporte','Remeras dry-fit',ds,'transpirar');
+  }
+
+  // ---- Trabajo ----
+  if(t.motivo==='trabajo'||t.motivo==='ambos'){
+    const labDays = t.motivo==='trabajo'? days : Math.ceil(days/2);
+    add('Trabajo','Camisas / blusas',Math.max(2,Math.ceil(labDays/2)),'reuniones');
+    add('Trabajo','Pantalón / pollera formal',Math.max(1,Math.ceil(labDays/3)),'oficina');
+    add('Trabajo','Blazer / saco',1,'formal');
+    add('Trabajo','Notebook + cargador',1,'trabajo');
+  }
+
+  // ---- Salidas ----
+  if(t.salidas!=='no'){
+    const outQ = t.salidas==='varias'? Math.max(2,Math.ceil(days/2)) : 2;
+    add('Salidas','Outfit de salida',outQ,'noches afuera');
+    add('Salidas','Perfume / desodorante',1,'arreglarse');
+  }
+
+  // ---- Higiene (siempre) ----
+  ['Cepillo y pasta de dientes','Shampoo / acondicionador','Jabón / gel','Desodorante','Cargador de celular']
+    .forEach(x=>add('Higiene y esenciales',x,1,''));
+  if(laundry) add('Higiene y esenciales','Jabón para lavar ropa',1,'vas lavando');
+
+  // ---- Accesorios elegidos ----
+  t.accesorios.forEach(a=>add('Accesorios',a,1,''));
+  // ---- Documentos ----
+  t.documentos.forEach(d=>add('Documentos',d,1,''));
+
+  // ordenar categorías
+  const order=['Documentos','Ropa interior','Ropa','Abrigo','Calzado','Playa','Nieve','Deporte','Trabajo','Salidas','Accesorios','Higiene y esenciales'];
+  return order.filter(o=>cats[o]).map(o=>({cat:o,items:cats[o]}));
+}
+
+/* ====================================================================
+   SIMULACIÓN DÍA POR DÍA
+   ==================================================================== */
+const DOW=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+function buildPlan(t){
+  const days=t.dias, w=t.clima;
+  const plan=[];
+  // actividades disponibles por tipo
+  const actsByTipo={
+    playa:{ic:'🏖️',name:'Playa',top:'remera o musculosa',bottom:'malla + short',shoe:'ojotas',extra:'gorra + protector'},
+    nieve:{ic:'🏔️',name:'Nieve / montaña',top:'térmica + buzo',bottom:'pantalón de nieve',shoe:'botas',extra:'guantes, gorro, antiparras'},
+    ciudad:{ic:'🏙️',name:'Ciudad',top:'remera + camisa liviana',bottom:'jean o pantalón',shoe:'zapatillas',extra:'lentes de sol'},
+    naturaleza:{ic:'🥾',name:'Trekking',top:'remera dry-fit',bottom:'pantalón cómodo',shoe:'botas/zapatillas',extra:'gorra + agua'},
+    turismo:{ic:'📸',name:'Paseo turístico',top:'remera cómoda',bottom:'short o pantalón liviano',shoe:'zapatillas',extra:'cámara + gorra'},
+  };
+  const tipos = t.tipos.length?t.tipos:['turismo'];
+  const start = t.fechaInicio ? new Date(t.fechaInicio+'T12:00:00') : null;
+  const band=tempBand(w);
+  const sportDays = pickSportDays(t.deporte,days);
+
+  for(let i=0;i<days;i++){
+    const date = start ? new Date(start.getTime()+i*86400000) : null;
+    const dow = date ? date.getDay() : ((i)%7);
+    const isWeekend = (dow===5||dow===6); // viernes/sábado
+    const tipo = tipos[i%tipos.length];
+    let act = {...actsByTipo[tipo]};
+    // trabajo pisa la mañana si corresponde
+    let working=false;
+    if((t.motivo==='trabajo') && !isWeekend){ working=true; }
+    else if(t.motivo==='ambos' && !isWeekend && i%2===0){ working=true; }
+
+    // clima del día
+    let cw=null, ico='🌡️', tline='';
+    if(w&&w.dias&&w.dias[i]){ cw=w.dias[i]; ico=wIcon(cw.code); tline=`${Math.round(cw.min)}°/${Math.round(cw.max)}°${cw.rain>=50?' 🌧️':''}`; }
+    else if(w){ ico=band==='caluroso'?'☀️':band==='frio'||band==='muyFrio'?'🥶':'🌤️'; tline=`${w.min}°/${w.max}°`; }
+
+    const cold = cw ? cw.max<15 : (band==='frio'||band==='muyFrio');
+    const rain = cw ? cw.rain>=50 : (w&&w.lluvia);
+
+    // mañana
+    let mañana;
+    if(working){
+      mañana = `Camisa/blusa + pantalón formal + ${cold?'blazer':'saco liviano'} + calzado de trabajo`;
+    } else {
+      mañana = `${cap(act.top)} + ${act.bottom} + ${act.shoe}`;
+      if(cold) mañana += ' + campera';
+      if(act.extra) mañana += ` (${act.extra})`;
+    }
+    if(rain) mañana += ' ☂️ + impermeable';
+
+    // deporte
+    const sport = sportDays.includes(i) ? 'Conjunto deportivo + zapatillas + dry-fit' : null;
+
+    // noche
+    let noche;
+    const saleHoy = t.salidas==='varias' ? (i%2===0||isWeekend) : t.salidas==='findes' ? isWeekend : false;
+    if(saleHoy){
+      noche = `Outfit de salida${cold?' + abrigo / campera':''}${band==='caluroso'?' (ropa fresca)':''}`;
+    } else {
+      noche = `Ropa cómoda / relax${cold?' + buzo abrigado':''}`;
+    }
+
+    plan.push({
+      i, label: date? `${DOW[dow]} ${date.getDate()}/${date.getMonth()+1}` : `Día ${i+1}`,
+      actName: working? '💼 '+act.name+' (trabajo)' : act.ic+' '+act.name,
+      ico, tline, mañana, noche, sport, salida:saleHoy
+    });
+  }
+  return plan;
+}
+function pickSportDays(d,days){
+  if(d==='no') return [];
+  if(d==='poco') return [Math.floor(days/2)];
+  if(d==='medio'){ const a=[]; for(let i=0;i<days;i+=2)a.push(i); return a; }
+  return Array.from({length:days},(_,i)=>i); // mucho
+}
+
+/* ====================================================================
+   RESULTADO
+   ==================================================================== */
+function finish(){
+  cfg.nombre = cfg.nombre || cfg.ciudad || 'Mi viaje';
+  cfg._result = true;
+  if(!DB.trips.find(x=>x.id===cfg.id)) DB.trips.push(cfg);
+  saveDB();
+  $('#nav').classList.add('hidden');
+  render();
+}
+
+function renderResult(app){
+  $('#nav').classList.add('hidden');
+  const cats=computeList(cfg);
+  const total=cats.reduce((n,c)=>n+c.items.length,0);
+  const done=Object.entries(cfg.checks).filter(([k,v])=>v).length;
+  const pct=total?Math.round(done/total*100):0;
+
+  // header card
+  const head=el('div','card');
+  const w=cfg.clima;
+  head.innerHTML=`<div class="ringwrap">
+      <div class="ring" style="--p:${pct}"><i>${pct}%</i></div>
+      <div><h1 style="margin:0">${cfg.nombre}</h1>
+      <div class="summary">
+        <span class="s">📅 ${cfg.dias} días</span>
+        ${cfg.ciudad?`<span class="s">📍 ${cfg.ciudad}</span>`:''}
+        ${w?`<span class="s">🌡️ ${w.min}°/${w.max}°</span>`:''}
+        <span class="s">${equipajeLabel(cfg.equipaje)}</span>
+      </div></div></div>`;
+  const edit=el('button','btn ghost sm'); edit.textContent='✏️ Editar respuestas';
+  edit.onclick=()=>{ cfg._result=false; stepIdx=0; render(); };
+  head.appendChild(edit);
+  app.appendChild(head);
+
+  // tabs
+  const tabs=el('div','tabs');
+  [['lista','📋 Lista'],['plan','👕 Día por día']].forEach(([k,lab])=>{
+    const b=el('button',resultTab===k?'on':''); b.textContent=lab; b.onclick=()=>{resultTab=k;render();}; tabs.appendChild(b);
+  });
+  app.appendChild(tabs);
+
+  if(resultTab==='lista') renderListTab(app,cats,total,done);
+  else renderPlanTab(app);
+}
+function equipajeLabel(e){return {carryon:'🎒 Carry-on',mochila:'🥾 Mochila',valija:'🧳 Valija 23kg',combo:'🧳🎒 Combo'}[e]||e;}
+
+function renderListTab(app,cats,total,done){
+  // aviso de espacio
+  if(cfg.equipaje==='carryon'||cfg.equipaje==='mochila'){
+    if(total>34){ const a=el('div','card'); a.style.borderColor='var(--warn)';
+      a.innerHTML=`<b>⚠️ Ojo con el espacio</b><p class="sub" style="margin:.4em 0 0">Son ${total} ítems para ${equipajeLabel(cfg.equipaje)}. Quizá convenga reducir mudas o lavar más seguido.</p>`;
+      app.appendChild(a);
+    }
+  }
+  cats.forEach(c=>{
+    const card=el('div','card cat');
+    card.innerHTML=`<h3>${catIcon(c.cat)} ${c.cat}</h3>`;
+    c.items.forEach((it,idx)=>{
+      const key=c.cat+'|'+it.name;
+      const done=!!cfg.checks[key];
+      const row=el('div','item'+(done?' done':''));
+      row.innerHTML=`<div class="box">✓</div>
+        <div class="name">${it.name}${it.why?`<span class="why">${it.why}</span>`:''}</div>
+        ${it.qty>1?`<span class="qty">×${it.qty}</span>`:''}`;
+      row.querySelector('.box').onclick=()=>{ cfg.checks[key]=!cfg.checks[key]; saveDB(); render(); };
+      card.appendChild(row);
+    });
+    app.appendChild(card);
+  });
+  // acciones
+  const act=el('div','card');
+  const reset=el('button','btn ghost block'); reset.textContent='↺ Desmarcar todo';
+  reset.onclick=()=>{ cfg.checks={}; saveDB(); render(); };
+  act.appendChild(reset);
+  app.appendChild(act);
+}
+function catIcon(c){return {'Documentos':'🪪','Ropa interior':'🩲','Ropa':'👕','Abrigo':'🧥','Calzado':'👟','Playa':'🏖️','Nieve':'🏔️','Deporte':'🏃','Trabajo':'💼','Salidas':'🍸','Accesorios':'🎒','Higiene y esenciales':'🧴'}[c]||'•';}
+
+function renderPlanTab(app){
+  const plan=buildPlan(cfg);
+  const intro=el('div','card');
+  intro.innerHTML=`<h2>Qué ponerte cada día</h2><p class="sub" style="margin:0">Una sugerencia de combinaciones según la actividad y el clima. Ajustá a gusto 😉</p>`;
+  app.appendChild(intro);
+  plan.forEach(d=>{
+    const card=el('div','day');
+    card.innerHTML=`<div class="dh"><b>${d.label}</b><span class="badge">${d.actName}</span></div>
+      ${d.tline?`<div class="summary"><span class="s">${d.ico} ${d.tline}</span></div>`:''}`;
+    card.appendChild(slot('🌅','Día',d.mañana));
+    if(d.sport) card.appendChild(slot('🏃','Deporte',d.sport));
+    card.appendChild(slot(d.salida?'🍸':'🌙','Noche',d.noche));
+    app.appendChild(card);
+  });
+}
+function slot(ic,title,txt){
+  const s=el('div','slot');
+  s.innerHTML=`<span class="si">${ic}</span><div class="sc"><b>${title}</b><span>${txt}</span></div>`;
+  return s;
+}
+
+/* ====================================================================
+   LOGIN GOOGLE + SYNC (Firebase) — se activa si hay FIREBASE_CONFIG
+   ==================================================================== */
+let _fb=null;
+async function initFirebase(){
+  if(!FIREBASE_CONFIG) return null;
+  if(_fb) return _fb;
+  const app = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const auth = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+  const fs = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const a = app.initializeApp(FIREBASE_CONFIG);
+  _fb={ app:a, auth, fs, authInst:auth.getAuth(a), db:fs.getFirestore(a) };
+  auth.onAuthStateChanged(_fb.authInst, async (u)=>{
+    if(u){ DB.user={uid:u.uid,name:u.displayName,email:u.email}; await cloudLoad(); }
+    else { DB.user=null; }
+    saveLocalOnly(); render();
+  });
+  return _fb;
+}
+async function signIn(){
+  if(!FIREBASE_CONFIG){ toast('Login Google: falta configurar Firebase (ver el código). Por ahora se guarda en este dispositivo.'); return; }
+  const fb=await initFirebase();
+  const prov=new fb.auth.GoogleAuthProvider();
+  try{ await fb.auth.signInWithPopup(fb.authInst,prov); }catch(e){ toast('No se pudo iniciar sesión'); }
+}
+async function signOut(){
+  if(_fb){ await _fb.auth.signOut(_fb.authInst); }
+  DB.user=null; saveLocalOnly(); render();
+}
+function saveLocalOnly(){ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+async function cloudSync(){
+  if(!_fb||!DB.user) return;
+  try{ await _fb.fs.setDoc(_fb.fs.doc(_fb.db,'usuarios',DB.user.uid),{trips:DB.trips,updated:Date.now()}); }catch(e){}
+}
+async function cloudLoad(){
+  if(!_fb||!DB.user) return;
+  try{
+    const snap=await _fb.fs.getDoc(_fb.fs.doc(_fb.db,'usuarios',DB.user.uid));
+    if(snap.exists()){ const d=snap.data(); if(d.trips) DB.trips=d.trips; saveLocalOnly(); }
+  }catch(e){}
+}
+
+/* ---------- arranque ---------- */
+if(FIREBASE_CONFIG) initFirebase();
+render();
+
+/* ---------- service worker (PWA) ---------- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
