@@ -1,5 +1,5 @@
 /* Service worker — cachea la app para uso offline */
-const CACHE = 'arma-valija-v1';
+const CACHE = 'valijapp-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -26,11 +26,27 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(e.request).catch(() => new Response('{}', {headers:{'Content-Type':'application/json'}})));
     return;
   }
-  // App shell: cache-first con actualización en segundo plano
+  if (e.request.method !== 'GET') return;
+  const isHTML = e.request.mode === 'navigate' ||
+    (e.request.destination === 'document') ||
+    url.pathname === '/' || url.pathname.endsWith('.html');
+
+  if (isHTML) {
+    // HTML: network-first → así los deploys nuevos se ven al recargar
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
+    );
+    return;
+  }
+  // Resto de assets: stale-while-revalidate (rápido + se actualiza solo)
   e.respondWith(
     caches.match(e.request).then(cached => {
       const net = fetch(e.request).then(res => {
-        if (res && res.status === 200 && e.request.method === 'GET') {
+        if (res && res.status === 200) {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, copy));
         }
