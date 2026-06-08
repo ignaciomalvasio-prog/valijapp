@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0f766e" />
 <link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <title>Valijapp</title>
 <style>
@@ -24,7 +26,8 @@
   .app{max-width:560px;margin:0 auto;padding:16px 16px 110px;}
   header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px 14px;}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:.2px}
-  .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:18px}
+  .brand .logo{width:36px;height:36px;border-radius:11px;overflow:hidden;display:grid;place-items:center;box-shadow:0 4px 12px rgba(14,165,233,.35)}
+  .brand .logo svg{width:100%;height:100%;display:block}
   .acct{display:flex;align-items:center;gap:8px}
   .btn{border:0;cursor:pointer;font:inherit;font-weight:700;border-radius:12px;padding:12px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;transition:transform .06s ease,filter .2s}
   .btn:active{transform:translateY(1px)}
@@ -190,6 +193,17 @@ const el = (t,c)=>{const e=document.createElement(t); if(c) e.className=c; retur
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800); }
 const cap = s => s? s[0].toUpperCase()+s.slice(1):s;
 
+// Isotipo de marca (valija minimalista con el gradiente de Valijapp)
+const LOGO_SVG = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">'
+  +'<defs><linearGradient id="vjg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">'
+  +'<stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs>'
+  +'<rect width="64" height="64" fill="url(#vjg)"/>'
+  +'<rect x="25" y="15" width="14" height="12" rx="4" fill="none" stroke="#ffffff" stroke-width="3.2"/>'
+  +'<rect x="16" y="24" width="32" height="26" rx="5" fill="#ffffff"/>'
+  +'<rect x="30.7" y="24" width="2.6" height="26" fill="#0ea5e9" opacity="0.8"/>'
+  +'<rect x="25.5" y="29.5" width="3" height="6" rx="1.5" fill="#14b8a6"/>'
+  +'<rect x="35.5" y="29.5" width="3" height="6" rx="1.5" fill="#14b8a6"/></svg>';
+
 /* ====================================================================
    WIZARD: definición de pasos
    ==================================================================== */
@@ -249,7 +263,7 @@ function render(){
 function headerEl(){
   const h = el('header','top');
   const brand = el('div','brand');
-  brand.innerHTML = '<span class="logo">🧳</span><span>Valijapp</span>';
+  brand.innerHTML = '<span class="logo">'+LOGO_SVG+'</span><span>Valijapp</span>';
   brand.style.cursor='pointer';
   brand.onclick=()=>{ cfg=null; render(); };
   const acct = el('div','acct');
@@ -550,6 +564,11 @@ function stepDiaXdia(c){
   c.insertAdjacentHTML('beforeend','<h1>Tu día a día</h1><p class="sub">Marcá qué hacés cada día y cada noche. Con esto afino la lista y te armo los outfits. <b>Lo que no marques queda como 🌴 día libre.</b></p>');
   const destinos=(cfg.destinos||[]);
   const start = cfg.fechaInicio ? new Date(cfg.fechaInicio+'T12:00:00') : null;
+  if(!start){
+    const h=el('p','muted'); h.style.cssText='font-size:13px;margin:-4px 0 10px';
+    h.innerHTML='💡 Cargá la <b>fecha de salida</b> (paso “¿Cuántos días?”) y te muestro el día de la semana de cada jornada.';
+    c.appendChild(h);
+  }
   // actividades de día permitidas según lo que elegiste
   const allowed=new Set();
   cfg.tipos.forEach(tp=>allowed.add(tp==='naturaleza'?'trekking':tp));
