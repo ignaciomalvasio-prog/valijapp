@@ -859,7 +859,7 @@ function computeList(t){
     if(salidaNights>0){
       const salQ = Math.max(1,Math.ceil(salidaNights/2)); // 1 cada 2 salidas
       add('Salidas','Remera / camisa de salir',salQ,`${salidaNights} salida(s) · 1 cada 2`);
-      add('Salidas','Pantalón / pollera de salir',Math.max(1,Math.ceil(salidaNights/3)),'para salir');
+      add('Salidas', gen==='fem'?'Pollera / pantalón de salir':gen==='masc'?'Pantalón de salir':'Pantalón / pollera de salir', Math.max(1,Math.ceil(salidaNights/3)),'para salir');
       add('Salidas','Perfume / desodorante',1,'arreglarse');
     }
   } else if(t.salidas!=='no'){
