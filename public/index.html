@@ -235,7 +235,7 @@ const ACCESORIOS = [
   {k:'Candado',ic:'🔒'},{k:'Botiquín / remedios',ic:'💊'},
   {k:'Neceser',ic:'🧳'},{k:'Placa de bruxismo',ic:'🦷'},{k:'Cremas varias',ic:'🧴'},
   {k:'Afeitadora',ic:'🪒'},{k:'Cargador de celular',ic:'🔌'},{k:'Suplementos nutricionales',ic:'💊'},
-  {k:'Computadora',ic:'💻'},{k:'Parlante',ic:'🔊'},{k:'Riñonera',ic:'👝'},
+  {k:'Computadora',ic:'💻'},{k:'Parlante',ic:'🔊'},{k:'Riñonera',ic:'👝'},{k:'Perfume',ic:'🧴'},
 ];
 // Actividades para el armado de outfit día por día
 const ACT_DIA = [
@@ -860,12 +860,10 @@ function computeList(t){
       const salQ = Math.max(1,Math.ceil(salidaNights/2)); // 1 cada 2 salidas
       add('Salidas','Remera / camisa de salir',salQ,`${salidaNights} salida(s) · 1 cada 2`);
       add('Salidas', gen==='fem'?'Pollera / pantalón de salir':gen==='masc'?'Pantalón de salir':'Pantalón / pollera de salir', Math.max(1,Math.ceil(salidaNights/3)),'para salir');
-      add('Salidas','Perfume / desodorante',1,'arreglarse');
     }
   } else if(t.salidas!=='no'){
     const outQ = t.salidas==='varias'? Math.max(2,Math.ceil(days/2)) : 2;
     add('Salidas','Outfit de salida',outQ,'noches afuera');
-    add('Salidas','Perfume / desodorante',1,'arreglarse');
   }
 
   // ---- Higiene (siempre) ----
