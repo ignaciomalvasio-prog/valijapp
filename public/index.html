@@ -235,7 +235,7 @@ const ACCESORIOS = [
   {k:'Candado',ic:'🔒'},{k:'Botiquín / remedios',ic:'💊'},
   {k:'Neceser',ic:'🧳'},{k:'Placa de bruxismo',ic:'🦷'},{k:'Cremas varias',ic:'🧴'},
   {k:'Afeitadora',ic:'🪒'},{k:'Cargador de celular',ic:'🔌'},{k:'Suplementos nutricionales',ic:'💊'},
-  {k:'Computadora',ic:'💻'},{k:'Parlante',ic:'🔊'},{k:'Riñonera',ic:'👝'},{k:'Perfume',ic:'🧴'},
+  {k:'Computadora',ic:'💻'},{k:'Parlante',ic:'🔊'},{k:'Riñonera',ic:'👝'},
 ];
 // Actividades para el armado de outfit día por día
 const ACT_DIA = [
@@ -867,7 +867,7 @@ function computeList(t){
   }
 
   // ---- Higiene (siempre) ----
-  ['Cepillo y pasta de dientes','Shampoo / acondicionador','Jabón / gel','Desodorante','Cargador de celular']
+  ['Cepillo y pasta de dientes','Shampoo / acondicionador','Jabón / gel','Desodorante','Perfume','Cargador de celular']
     .forEach(x=>add('Higiene y esenciales',x,1,''));
   if(laundry) add('Higiene y esenciales','Jabón para lavar ropa',1,'vas lavando');
 
