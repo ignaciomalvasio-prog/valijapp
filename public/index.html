@@ -228,6 +228,8 @@ const ACCESORIOS = [
   {k:'Adaptador de enchufe',ic:'🔋'},{k:'Cámara de fotos',ic:'📷'},{k:'Bolsa para ropa sucia',ic:'🧺'},
   {k:'Candado',ic:'🔒'},{k:'Botiquín / remedios',ic:'💊'},
   {k:'Neceser',ic:'🧳'},{k:'Placa de bruxismo',ic:'🦷'},{k:'Cremas varias',ic:'🧴'},
+  {k:'Afeitadora',ic:'🪒'},{k:'Cargador de celular',ic:'🔌'},{k:'Suplementos nutricionales',ic:'💊'},
+  {k:'Computadora',ic:'💻'},{k:'Parlante',ic:'🔊'},{k:'Riñonera',ic:'👝'},
 ];
 // Actividades para el armado de outfit día por día
 const ACT_DIA = [
@@ -578,7 +580,8 @@ function radioOpts(opts,key){
 // Paso: día a día. Usa días + destinos + tipos para que marques cada jornada.
 function stepDiaXdia(c){
   cfg.dayPlans = cfg.dayPlans || {};
-  c.insertAdjacentHTML('beforeend','<h1>Tu día a día</h1><p class="sub">Marcá qué hacés cada día y cada noche. Con esto afino la lista y te armo los outfits. <b>Lo que no marques queda como 🌴 día libre.</b></p>');
+  c.insertAdjacentHTML('beforeend','<h1>Tu día a día <span style="font-size:14px;color:var(--muted);font-weight:600">(opcional)</span></h1>'+
+    '<p class="sub">✨ Si completás cada jornada, te armo un <b>outfit estimado día por día</b> y afino la lista según lo que vas a hacer. Si no lo necesitás, tocá <b>“Siguiente”</b> para saltearlo. Lo que no marques queda como 🌴 día libre.</p>');
   const destinos=(cfg.destinos||[]);
   const start = cfg.fechaInicio ? new Date(cfg.fechaInicio+'T12:00:00') : null;
   if(!start){
@@ -720,14 +723,19 @@ function computeList(t){
   // ---- conteos del día a día (si el usuario los completó) ----
   const dpv = Object.values(t.dayPlans||{}).filter(Boolean);
   const usePlan = dpv.some(d=>d.dia||d.noche);
-  const beachDays    = dpv.filter(d=>d.dia==='playa'||d.dia==='pileta').length;
-  const sportDaysN   = dpv.filter(d=>d.dia==='deporte'||d.noche==='deporte').length;
+  const cD = k => dpv.filter(d=>d.dia===k).length;
+  const playaDays=cD('playa'), piletaDays=cD('pileta'), turismoDays=cD('turismo'),
+        ciudadDays=cD('ciudad'), trekkingDays=cD('trekking'), nieveDays=cD('nieve'),
+        trabajoDays=cD('trabajo'), descansoDays=cD('descanso');
+  const swimDays = playaDays+piletaDays;
+  const deporteDays  = dpv.filter(d=>d.dia==='deporte'||d.noche==='deporte').length;
   const salidaNights = dpv.filter(d=>['salida','boliche','formal'].includes(d.noche)).length;
+  const beachDays = swimDays, sportDaysN = deporteDays; // compat
 
   // ---- Básicos / ropa interior ----
   const ri=qtyByCycle(days,t.ropaInterior);
   add('Ropa interior','Ropa interior',ri, t.ropaInterior==='diario'?'una por día':'lavando en el viaje');
-  add('Ropa interior','Medias',Math.max(ri, has('naturaleza')||has('nieve')?ri+1:ri), 'incluye un par extra si camina mucho');
+  add('Ropa interior','Medias',ri,'igual que la ropa interior');
   if(t.motivo!=='trabajo' && (has('playa')||band==='caluroso'||band==='calido'))
     add('Ropa interior','Medias cortas / soquetes',Math.ceil(ri/2),'clima cálido');
   add('Ropa interior','Pijama',days>4?2:1,'para dormir');
@@ -742,12 +750,18 @@ function computeList(t){
     add('Ropa','Buzo / sweater',bandCold==='muyFrio'||bandCold==='frio'?2:1,'abrigo intermedio');
 
   // ---- Parte inferior ----
-  if(band==='caluroso'||band==='calido'||has('playa')){
-    add('Ropa','Shorts / bermudas',Math.max(2,Math.ceil(days/3)),'clima cálido');
+  if(usePlan){
+    // 1 prenda de abajo "para andar" cada ~3 días
+    add('Ropa','Pantalones / bermudas para andar', Math.max(1,Math.ceil(days/3)),'una cada ~3 días');
+    if(bandCold==='muyFrio'||bandCold==='frio'||nieveDays>0)
+      add('Ropa','Pantalón abrigado extra',1,'para el frío');
+  } else {
+    if(band==='caluroso'||band==='calido'||has('playa'))
+      add('Ropa','Shorts / bermudas',Math.max(2,Math.ceil(days/3)),'clima cálido');
+    add('Ropa','Pantalones largos',Math.max(2,Math.ceil(days/4)), bandCold==='muyFrio'||has('nieve')?'también para el frío':'para salir / fresco de noche');
+    if(t.motivo==='ocio' && (has('ciudad')||has('turismo')))
+      add('Ropa','Jean / pantalón casual',1,'versátil para todo');
   }
-  add('Ropa','Pantalones largos',Math.max(2,Math.ceil(days/4)), bandCold==='muyFrio'||has('nieve')?'también para el frío':'para salir / fresco de noche');
-  if(t.motivo==='ocio' && (has('ciudad')||has('turismo')))
-    add('Ropa','Jean / pantalón casual',1,'versátil para todo');
   if(gen==='fem' && (t.salidas!=='no' || t.motivo!=='trabajo'))
     add('Ropa','Vestido / pollera', t.salidas==='varias'?2:1,'para salir o pasear');
 
@@ -764,16 +778,17 @@ function computeList(t){
   if(lluvia||has('naturaleza'))
     add('Abrigo','Impermeable / piloto',1, lluvia?'probable lluvia':'naturaleza');
 
-  // ---- Calzado ----
-  add('Calzado','Zapatillas cómodas',1,'para caminar');
-  if(has('playa')) add('Calzado','Ojotas / sandalias',1,'playa');
-  if(has('nieve')||has('naturaleza')) add('Calzado','Botas / borcegos',1,'terreno');
-  if(t.salidas!=='no'||t.motivo!=='ocio') add('Calzado','Calzado para salir / formal',1, t.motivo==='ocio'?'salidas':'trabajo');
+  // ---- Calzado (separado por uso; ~1 cada 5 días para caminar) ----
+  add('Calzado','Zapatillas para caminar', Math.max(1,Math.ceil(days/5)),'pasear / caminar');
+  if(has('playa')||(usePlan&&swimDays>0)) add('Calzado','Ojotas / sandalias',1,'playa');
+  if(has('nieve')||has('naturaleza')||(usePlan&&(nieveDays>0||trekkingDays>0))) add('Calzado','Botas / borcegos',1,'terreno');
+  if(usePlan? salidaNights>0 : t.salidas!=='no') add('Calzado','Zapatillas / calzado de salir',1,'salidas');
+  if(usePlan? trabajoDays>0 : (t.motivo!=='ocio')) add('Calzado','Calzado formal de reunión',1,'trabajo');
 
   // ---- Playa ----
-  if(has('playa')){
-    add('Playa','Malla / traje de baño', usePlan?(beachDays>4?2:1):(days>5?2:1),'playa/pileta');
-    add('Playa','Remera de playa', usePlan?(beachDays>3?2:1):(days>5?2:1),'para la arena y el sol');
+  if(has('playa')||(usePlan&&swimDays>0)){
+    add('Playa','Malla / traje de baño', usePlan?Math.max(1,Math.ceil(swimDays/2)):(days>5?2:1), usePlan?`${swimDays} día(s) de playa/pileta · 1 cada 2`:'playa/pileta');
+    add('Playa','Remera de playa', usePlan?Math.max(1,Math.ceil(swimDays/2)):(days>5?2:1),'para la arena y el sol');
     add('Playa','Toalla de playa',1,'playa');
     add('Playa','Protector solar',1,'sol');
     add('Playa','Salida de baño / pareo',1,'comodidad');
@@ -786,13 +801,22 @@ function computeList(t){
   }
 
   // ---- Deporte (usa el día a día si está completado) ----
-  let ds=deporteSets(t.deporte,days);
-  if(usePlan) ds=sportDaysN;
-  if(ds>0){
-    add('Deporte','Conjunto deportivo',ds, usePlan?`${ds} día(s) de deporte`:(t.deporte==='mucho'?'uso diario':t.deporte==='medio'?'seguido':'ocasional'));
-    add('Deporte','Zapatillas deportivas',1,'entrenar');
-    add('Deporte','Medias deportivas',ds,'deporte');
-    if(has('playa')||band==='caluroso') add('Deporte','Remeras dry-fit',ds,'transpirar');
+  if(usePlan){
+    if(deporteDays>0){
+      const rem=Math.max(1,Math.ceil(deporteDays/2)); // remera deporte 1 cada 2 días
+      add('Deporte','Remera deportiva',rem,`${deporteDays} día(s) de deporte · 1 cada 2`);
+      add('Deporte','Short / calza deportiva',rem,'deporte');
+      add('Deporte','Medias deportivas',rem,'deporte');
+      add('Deporte','Zapatillas deportivas',1,'entrenar');
+    }
+  } else {
+    const ds=deporteSets(t.deporte,days);
+    if(ds>0){
+      add('Deporte','Conjunto deportivo',ds, t.deporte==='mucho'?'uso diario':t.deporte==='medio'?'seguido':'ocasional');
+      add('Deporte','Zapatillas deportivas',1,'entrenar');
+      add('Deporte','Medias deportivas',ds,'deporte');
+      if(has('playa')||band==='caluroso') add('Deporte','Remeras dry-fit',ds,'transpirar');
+    }
   }
 
   // ---- Trabajo ----
@@ -807,8 +831,9 @@ function computeList(t){
   // ---- Salidas (usa el día a día si está completado) ----
   if(usePlan){
     if(salidaNights>0){
-      const outQ = salidaNights<=2 ? salidaNights : Math.ceil(salidaNights/2)+1;
-      add('Salidas','Outfit de salida',outQ,`${salidaNights} noche(s) de salida`);
+      const salQ = Math.max(1,Math.ceil(salidaNights/2)); // 1 cada 2 salidas
+      add('Salidas','Remera / camisa de salir',salQ,`${salidaNights} salida(s) · 1 cada 2`);
+      add('Salidas','Pantalón / pollera de salir',Math.max(1,Math.ceil(salidaNights/3)),'para salir');
       add('Salidas','Perfume / desodorante',1,'arreglarse');
     }
   } else if(t.salidas!=='no'){
@@ -847,7 +872,8 @@ function computeList(t){
 function itemWeight(name){
   const n=(name||'').toLowerCase();
   const W=[
-    [/notebook|laptop/,1800],
+    [/notebook|laptop|computadora/,1800],
+    [/parlante|altavoz/,450],[/afeitadora/,250],[/suplemento/,400],[/ri[ñn]onera/,180],
     [/campera abrigada|campera.*nieve|nieve.*campera/,900],
     [/pantal[oó]n de nieve/,750],
     [/bota|borceg/,1100],
@@ -879,6 +905,19 @@ function itemWeight(name){
 const LUGGAGE_CAP={carryon:10,mochila:8,valija:23,valijaCarry:33,valijaCarryMochila:41,combo:33};
 function totalWeight(cats){
   let g=0; cats.forEach(c=>c.items.forEach(it=>{ g+=itemWeight(it.name)*(it.qty||1); })); return g;
+}
+
+// Resumen de actividades del día a día -> [{label,count}]
+function activitySummary(t){
+  const dpv=Object.values(t.dayPlans||{}).filter(Boolean);
+  const dayLbl={playa:'playa',pileta:'pileta/spa',turismo:'turismo',ciudad:'ciudad',trekking:'trekking',nieve:'nieve',trabajo:'trabajo',deporte:'deporte',descanso:'descanso'};
+  const nightLbl={salida:'salidas',boliche:'bar/boliche',formal:'cenas formales',deporte:'deporte de noche'};
+  const c={};
+  dpv.forEach(d=>{ if(d.dia)c['d:'+d.dia]=(c['d:'+d.dia]||0)+1; if(d.noche)c['n:'+d.noche]=(c['n:'+d.noche]||0)+1; });
+  const out=[];
+  Object.keys(dayLbl).forEach(k=>{ if(c['d:'+k]) out.push({label:dayLbl[k],count:c['d:'+k]}); });
+  ['salida','boliche','formal','deporte'].forEach(k=>{ if(c['n:'+k]) out.push({label:nightLbl[k],count:c['n:'+k]}); });
+  return out;
 }
 
 /* ====================================================================
@@ -1010,6 +1049,15 @@ function equipajeLabel(e){return {carryon:'🎒 Carry-on',mochila:'🥾 Mochila'
 function renderListTab(app,cats,total,done){
   cfg.listEdits = cfg.listEdits || {removed:{},qty:{},custom:[]};
   const ed=cfg.listEdits;
+  // resumen de actividades (si completó el día a día)
+  const resumen=activitySummary(cfg);
+  if(resumen.length){
+    const rc=el('div','card');
+    rc.innerHTML='<h3 style="color:var(--accent);margin:0 0 8px">📋 Tu viaje, día por día</h3>'+
+      '<p class="sub" style="margin:0">La lista está calculada en base a: '+
+      resumen.map(r=>`<b>${r.count}</b> ${r.label}`).join(' · ')+'.</p>';
+    app.appendChild(rc);
+  }
   // peso estimado del equipaje
   const cap = LUGGAGE_CAP[cfg.equipaje]||23;
   const kg = totalWeight(cats)/1000;
