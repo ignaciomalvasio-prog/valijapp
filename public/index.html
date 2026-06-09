@@ -65,6 +65,13 @@
     padding:13px 14px;font:inherit;outline:none
   }
   input:focus,select:focus{border-color:var(--accent)}
+  input[type=date]{color-scheme:dark;min-height:50px;-webkit-appearance:none;appearance:none}
+  .suglist{position:relative;margin-top:6px}
+  .sugbox{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card2)}
+  .sugitem{padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(34,48,74,.5);font-size:15px}
+  .sugitem:last-child{border-bottom:0}
+  .sugitem:hover,.sugitem:active{background:var(--pill)}
+  .sugitem small{color:var(--muted);margin-left:6px}
   .stepper{display:flex;align-items:center;gap:12px;justify-content:center;margin:8px 0}
   .stepper button{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--pill);color:var(--txt);font-size:22px;font-weight:800;cursor:pointer}
   .stepper .val{font-size:34px;font-weight:800;min-width:70px;text-align:center}
@@ -180,7 +187,7 @@ function newConfig(){
     deporte:'no',             // no | poco | medio | mucho
     motivo:'ocio',            // ocio | trabajo | ambos
     salidas:'findes',         // no | findes | varias
-    equipaje:'carryon',       // carryon | mochila | valija | valijaCarry | valijaCarryMochila
+    equipaje:{mochila:0,carryon:1,valija:0}, // cantidades por pieza
     ciudad:'',                // resumen de destinos (texto)
     destinos:[],              // [{ciudad, clima}] multidestino
     clima:null,               // clima combinado {min,max,lluvia,dias,source}
@@ -217,9 +224,8 @@ const LOGO_SVG = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" wi
 const TIPOS = [
   {k:'playa', ic:'🏖️', t:'Playa', s:'Sol, arena y agua'},
   {k:'nieve', ic:'🏔️', t:'Nieve', s:'Frío, ski o montaña'},
-  {k:'ciudad', ic:'🏙️', t:'Ciudad', s:'Urbano, caminar'},
+  {k:'ciudad', ic:'🏙️', t:'Ciudad', s:'Urbano, paseos y turismo'},
   {k:'naturaleza', ic:'🥾', t:'Naturaleza', s:'Trekking, camping'},
-  {k:'turismo', ic:'📸', t:'Turismo', s:'Paseos y visitas'},
 ];
 const ACCESORIOS = [
   {k:'Gorra/sombrero',ic:'🧢'},{k:'Lentes de sol',ic:'🕶️'},{k:'Libro',ic:'📖'},
@@ -233,24 +239,19 @@ const ACCESORIOS = [
 ];
 // Actividades para el armado de outfit día por día
 const ACT_DIA = [
-  {k:'playa',label:'🏖️ Playa',outfit:'Malla + short + remera/musculosa + ojotas (gorra y protector)'},
+  {k:'playa',label:'🏖️ Playa / pileta',outfit:'Malla + short + remera/musculosa + ojotas (gorra y protector)'},
   {k:'ciudad',label:'🏙️ Ciudad / paseo',outfit:'Jean o pantalón + remera + zapatillas'},
-  {k:'trekking',label:'🥾 Trekking / naturaleza',outfit:'Pantalón cómodo + remera dry-fit + zapatillas o botas + gorra'},
-  {k:'turismo',label:'📸 Turismo',outfit:'Remera cómoda + short o pantalón liviano + zapatillas'},
+  {k:'trekking',label:'🥾 Trekking / naturaleza',outfit:'Pantalón cómodo + remera + zapatillas o botas + gorra'},
   {k:'nieve',label:'🏔️ Nieve / montaña',outfit:'Térmica + buzo + pantalón de nieve + botas (guantes, gorro, antiparras)'},
   {k:'trabajo',label:'💼 Trabajo',outfit:'Camisa/blusa + pantalón formal + calzado de trabajo'},
-  {k:'deporte',label:'🏃 Deporte',outfit:'Conjunto deportivo + zapatillas + dry-fit'},
-  {k:'pileta',label:'🏊 Pileta / spa',outfit:'Malla + salida de baño + ojotas'},
-  {k:'descanso',label:'😌 Descanso',outfit:'Ropa cómoda'},
+  {k:'turismo',label:'📸 Paseo',outfit:'Remera cómoda + short o pantalón liviano + zapatillas'},
 ];
 const ACT_NOCHE = [
   {k:'salida',label:'🍸 Salida / cena',outfit:'Outfit de salida'},
   {k:'boliche',label:'🎉 Bar / boliche',outfit:'Outfit canchero de salida'},
-  {k:'formal',label:'🥂 Cena formal',outfit:'Camisa o vestido + zapatos elegantes'},
   {k:'relax',label:'🌙 Tranqui / relax',outfit:'Ropa cómoda / pijama'},
-  {k:'deporte',label:'🏃 Deporte',outfit:'Conjunto deportivo'},
 ];
-const DOCS = ['DNI/Pasaporte','Tarjetas','Pasajes / reservas','Seguro de viaje','Licencia de conducir','Efectivo / cambio','Vacunas / certificados'];
+const DOCS = ['DNI/Pasaporte','Visa','Tarjetas','Pasajes / reservas','Seguro de viaje','Licencia de conducir','Efectivo / cambio','Vacunas / certificados'];
 
 const steps = [
   stepTipos, stepGenero, stepDias, stepRopaInterior, stepDeporte, stepMotivo,
@@ -370,31 +371,27 @@ function stepDias(c){
   st.appendChild(minus); st.appendChild(val); st.appendChild(plus);
   c.appendChild(st);
 
-  // fechas: salida + llegada → cálculo automático
+  // fechas: salida + llegada → cálculo automático (sin re-render para no romper el picker en mobile)
   const g=el('div','grid2'); g.style.marginTop='6px';
   g.innerHTML=`
     <div><label class="lbl">Salida</label><input id="fSal" type="date" value="${cfg.fechaInicio||''}"></div>
     <div><label class="lbl">Llegada / vuelta</label><input id="fLle" type="date" value="${cfg.fechaFin||''}"></div>`;
   c.appendChild(g);
+  const note=el('p','muted'); note.style.cssText='font-size:13px;margin:8px 0 0';
+  const upd=()=>{ note.textContent = (cfg.fechaInicio&&cfg.fechaFin)
+      ? `Calculado: ${cfg.dias} días (incluye salida y llegada).`
+      : 'Tip: cargar las fechas también mejora el pronóstico del clima.'; };
   const recalc=()=>{
     const sal=$('#fSal',c).value, lle=$('#fLle',c).value;
     cfg.fechaInicio=sal; cfg.fechaFin=lle;
     if(sal && lle){
       const d=Math.round((new Date(lle+'T12:00:00') - new Date(sal+'T12:00:00'))/86400000)+1;
-      if(d>=1 && d<=120){ cfg.dias=d; }
+      if(d>=1 && d<=120){ cfg.dias=d; val.textContent=d; }
     }
-    render();
+    upd();
   };
   $('#fSal',c).onchange=recalc; $('#fLle',c).onchange=recalc;
-  if(cfg.fechaInicio && cfg.fechaFin){
-    const note=el('p','muted'); note.style.cssText='font-size:13px;margin:8px 0 0';
-    note.textContent=`Calculado: ${cfg.dias} días (incluye salida y llegada).`;
-    c.appendChild(note);
-  } else {
-    const note=el('p','muted'); note.style.cssText='font-size:13px;margin:8px 0 0';
-    note.textContent='Tip: cargar las fechas también mejora el pronóstico del clima.';
-    c.appendChild(note);
-  }
+  upd(); c.appendChild(note);
 }
 
 function stepGenero(c){
@@ -449,15 +446,28 @@ function stepSalidas(c){
 }
 
 function stepEquipaje(c){
-  c.insertAdjacentHTML('beforeend','<h1>¿Con qué viajás?</h1><p class="sub">Lo uso para avisarte si te estás pasando de espacio.</p>');
-  const opts=[
-    {k:'carryon',ic:'🎒',t:'Carry-on',s:'Cabina, ~8–10 kg'},
-    {k:'mochila',ic:'🥾',t:'Mochila',s:'Mochilero / minimal'},
-    {k:'valija',ic:'🧳',t:'Valija grande',s:'Bodega, hasta 23 kg'},
-    {k:'valijaCarry',ic:'🧳🎒',t:'Valija + carry-on',s:'Bodega + cabina'},
-    {k:'valijaCarryMochila',ic:'🧳🎒🥾',t:'Valija + carry-on + mochila',s:'Todo el combo'},
+  c.insertAdjacentHTML('beforeend','<h1>¿Con qué viajás?</h1><p class="sub">Elegí cuántas piezas de cada una; armá el combo como te quede mejor. Lo uso para estimar el peso disponible.</p>');
+  if(!cfg.equipaje || typeof cfg.equipaje!=='object') cfg.equipaje = equipajeCounts(cfg); // migrar formato viejo
+  const rows=[
+    {k:'mochila',ic:'🥾',t:'Mochila',s:'~8 kg'},
+    {k:'carryon',ic:'🎒',t:'Carry-on',s:'~10 kg'},
+    {k:'valija',ic:'🧳',t:'Valija grande',s:'hasta 23 kg'},
   ];
-  c.appendChild(radioOpts(opts,'equipaje'));
+  const wrap=el('div','opts');
+  rows.forEach(o=>{
+    const row=el('div','opt'); row.style.cursor='default';
+    row.innerHTML=`<span class="ic">${o.ic}</span><span class="tx"><b>${o.t}</b><small>${o.s}</small></span>`;
+    const qc=el('div','qtyc'); qc.style.marginLeft='auto';
+    const minus=el('button','qbtn'); minus.textContent='−'; minus.onclick=()=>{ cfg.equipaje[o.k]=Math.max(0,(cfg.equipaje[o.k]||0)-1); render(); };
+    const qv=el('span','qv'); qv.textContent=cfg.equipaje[o.k]||0;
+    const plus=el('button','qbtn'); plus.textContent='+'; plus.onclick=()=>{ cfg.equipaje[o.k]=(cfg.equipaje[o.k]||0)+1; render(); };
+    qc.appendChild(minus); qc.appendChild(qv); qc.appendChild(plus);
+    row.appendChild(qc); wrap.appendChild(row);
+  });
+  c.appendChild(wrap);
+  const note=el('p','muted'); note.style.cssText='font-size:14px;margin:12px 2px 0';
+  note.innerHTML=`Capacidad total estimada: <b style="color:var(--accent)">~${equipajeCapacity(cfg)} kg</b>`;
+  c.appendChild(note);
 }
 
 function stepDestino(c){
@@ -479,22 +489,38 @@ function stepDestino(c){
     c.appendChild(list);
   }
 
-  // agregar por búsqueda
+  // agregar por búsqueda con autocompletado
   const f=el('div','field');
-  const inp=el('input'); inp.type='text'; inp.id='destInp'; inp.placeholder='Ej: Bariloche, Río de Janeiro, Madrid…';
+  const inp=el('input'); inp.type='text'; inp.id='destInp'; inp.placeholder='Escribí una ciudad…'; inp.autocomplete='off';
   f.appendChild(inp);
-  const btn=el('button','btn sm'); btn.style.marginTop='10px'; btn.textContent='➕ Agregar destino (con clima)';
-  btn.onclick=async()=>{
-    const q=$('#destInp',c).value.trim(); if(!q){ toast('Escribí un destino'); return; }
-    btn.disabled=true; btn.textContent='Buscando clima…';
-    try{
-      const d=await fetchClima(q);
-      if(!d){ toast('No encontré ese lugar; probá otro o cargalo a mano'); }
-      else { cfg.destinos.push(d); recomputeCombined(); }
-    }catch(e){ toast('No pude traer el clima; probá de nuevo'); }
-    render();
+  const sug=el('div','suglist'); f.appendChild(sug);
+  c.appendChild(f);
+  let tmr=null;
+  inp.oninput=()=>{
+    clearTimeout(tmr);
+    const q=inp.value.trim();
+    if(q.length<2){ sug.innerHTML=''; return; }
+    tmr=setTimeout(async()=>{
+      const res=await geoSuggest(q);
+      if(inp.value.trim()!==q) return; // quedó vieja
+      sug.innerHTML='';
+      const box=el('div','sugbox');
+      if(!res.length){ box.innerHTML='<div class="sugitem muted">Sin resultados — probá otro nombre o cargalo a mano abajo</div>'; sug.appendChild(box); return; }
+      res.forEach(g=>{
+        const it=el('div','sugitem');
+        const region=[g.admin1,g.country].filter(Boolean).join(', ');
+        it.innerHTML=`📍 ${g.name}<small>${region}</small>`;
+        it.onclick=async()=>{
+          box.innerHTML='<div class="sugitem">Buscando clima de '+g.name+'…</div>';
+          try{ const d=await climaFromGeo(g); cfg.destinos.push(d); recomputeCombined(); }
+          catch(e){ toast('No pude traer el clima; probá de nuevo'); }
+          render();
+        };
+        box.appendChild(it);
+      });
+      sug.appendChild(box);
+    },280);
   };
-  f.appendChild(btn); c.appendChild(f);
 
   // agregar manual
   const det=el('details'); det.style.marginTop='12px';
@@ -592,10 +618,7 @@ function stepDiaXdia(c){
   // actividades de día permitidas según lo que elegiste
   const allowed=new Set();
   cfg.tipos.forEach(tp=>allowed.add(tp==='naturaleza'?'trekking':tp));
-  allowed.add('descanso');
-  if(cfg.tipos.includes('playa')) allowed.add('pileta');
   if(cfg.motivo!=='ocio') allowed.add('trabajo');
-  if(cfg.deporte!=='no') allowed.add('deporte');
   const dayActs=ACT_DIA.filter(a=>allowed.has(a.k));
 
   for(let i=0;i<cfg.dias;i++){
@@ -629,11 +652,21 @@ function stepDiaXdia(c){
 /* ====================================================================
    CLIMA — Open-Meteo (geocoding + forecast), sin API key
    ==================================================================== */
+// Sugerencias de lugares mientras se escribe (autocompletado)
+async function geoSuggest(query){
+  try{
+    const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=es`).then(x=>x.json());
+    return r.results||[];
+  }catch(e){ return []; }
+}
 // Geocodifica un lugar y devuelve {ciudad, clima} o null. Lanza si falla la red.
 async function fetchClima(query){
   const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=es`).then(r=>r.json());
   if(!geo.results||!geo.results.length) return null;
-  const g=geo.results[0];
+  return climaFromGeo(geo.results[0]);
+}
+// Trae el clima a partir de un resultado de geocoding ya elegido
+async function climaFromGeo(g){
   const nombre=g.name+(g.country?', '+g.country:'');
   const start = cfg.fechaInicio ? new Date(cfg.fechaInicio) : new Date();
   const today=new Date(); today.setHours(0,0,0,0);
@@ -743,7 +776,7 @@ function computeList(t){
 
   // ---- Parte superior ----
   const topsBase = laundry ? qtyByCycle(days,'diaPorMedio')+1 : days; // remeras
-  add('Ropa','Remeras / tops',Math.max(2,topsBase), laundry?'lavando':'una por día aprox.');
+  add('Ropa','Remeras',Math.max(2,topsBase), laundry?'lavando':'una por día aprox.');
   if(bandCold==='templado'||bandCold==='frio'||bandCold==='muyFrio'||has('nieve'))
     add('Ropa','Remeras manga larga',Math.max(1,Math.ceil(days/3)),'para las capas / frío');
   if(bandCold!=='caluroso')
@@ -759,7 +792,7 @@ function computeList(t){
     if(band==='caluroso'||band==='calido'||has('playa'))
       add('Ropa','Shorts / bermudas',Math.max(2,Math.ceil(days/3)),'clima cálido');
     add('Ropa','Pantalones largos',Math.max(2,Math.ceil(days/4)), bandCold==='muyFrio'||has('nieve')?'también para el frío':'para salir / fresco de noche');
-    if(t.motivo==='ocio' && (has('ciudad')||has('turismo')))
+    if(t.motivo==='ocio' && has('ciudad'))
       add('Ropa','Jean / pantalón casual',1,'versátil para todo');
   }
   if(gen==='fem' && (t.salidas!=='no' || t.motivo!=='trabajo'))
@@ -800,22 +833,15 @@ function computeList(t){
     add('Nieve','Medias térmicas',2,'pies calientes');
   }
 
-  // ---- Deporte (usa el día a día si está completado) ----
-  if(usePlan){
-    if(deporteDays>0){
-      const rem=Math.max(1,Math.ceil(deporteDays/2)); // remera deporte 1 cada 2 días
-      add('Deporte','Remera deportiva',rem,`${deporteDays} día(s) de deporte · 1 cada 2`);
+  // ---- Deporte (siempre según la encuesta) ----
+  {
+    const ds=deporteSets(t.deporte,days);
+    if(ds>0){
+      const rem=Math.max(1,Math.ceil(ds/2)); // remera de deporte ~1 cada 2 usos
+      add('Deporte','Remera deportiva',rem, t.deporte==='mucho'?'uso diario':t.deporte==='medio'?'seguido':'ocasional');
       add('Deporte','Short / calza deportiva',rem,'deporte');
       add('Deporte','Medias deportivas',rem,'deporte');
       add('Deporte','Zapatillas deportivas',1,'entrenar');
-    }
-  } else {
-    const ds=deporteSets(t.deporte,days);
-    if(ds>0){
-      add('Deporte','Conjunto deportivo',ds, t.deporte==='mucho'?'uso diario':t.deporte==='medio'?'seguido':'ocasional');
-      add('Deporte','Zapatillas deportivas',1,'entrenar');
-      add('Deporte','Medias deportivas',ds,'deporte');
-      if(has('playa')||band==='caluroso') add('Deporte','Remeras dry-fit',ds,'transpirar');
     }
   }
 
@@ -1026,7 +1052,7 @@ function renderResult(app){
         <span class="s">📅 ${cfg.dias} días</span>
         ${cfg.ciudad?`<span class="s">📍 ${cfg.ciudad}</span>`:''}
         ${w?`<span class="s">🌡️ ${w.min}°/${w.max}°</span>`:''}
-        <span class="s">${equipajeLabel(cfg.equipaje)}</span>
+        <span class="s">${equipajeLabel(cfg)}</span>
         <span class="s">⚖️ ${(totalWeight(cats)/1000).toFixed(1)} kg</span>
       </div></div></div>`;
   const edit=el('button','btn ghost sm'); edit.textContent='✏️ Editar respuestas';
@@ -1044,7 +1070,23 @@ function renderResult(app){
   if(resultTab==='lista') renderListTab(app,cats,total,done);
   else renderPlanTab(app);
 }
-function equipajeLabel(e){return {carryon:'🎒 Carry-on',mochila:'🥾 Mochila',valija:'🧳 Valija 23kg',combo:'🧳🎒 Combo',valijaCarry:'🧳🎒 Valija + carry-on',valijaCarryMochila:'🧳🎒🥾 Valija + carry-on + mochila'}[e]||e;}
+// Equipaje como combo de piezas (compatible con el formato viejo en string)
+const PIECE_CAP={mochila:8,carryon:10,valija:23};
+function equipajeCounts(t){
+  const e=t.equipaje;
+  if(e && typeof e==='object') return {mochila:e.mochila||0,carryon:e.carryon||0,valija:e.valija||0};
+  const map={carryon:{carryon:1},mochila:{mochila:1},valija:{valija:1},valijaCarry:{valija:1,carryon:1},valijaCarryMochila:{valija:1,carryon:1,mochila:1},combo:{valija:1,carryon:1}};
+  const m=map[e]||{carryon:1};
+  return {mochila:m.mochila||0,carryon:m.carryon||0,valija:m.valija||0};
+}
+function equipajeCapacity(t){const c=equipajeCounts(t);return c.mochila*PIECE_CAP.mochila+c.carryon*PIECE_CAP.carryon+c.valija*PIECE_CAP.valija;}
+function equipajeLabel(t){
+  const c=equipajeCounts(t); const p=[];
+  if(c.valija)p.push((c.valija>1?c.valija+'× ':'')+'🧳 valija');
+  if(c.carryon)p.push((c.carryon>1?c.carryon+'× ':'')+'🎒 carry-on');
+  if(c.mochila)p.push((c.mochila>1?c.mochila+'× ':'')+'🥾 mochila');
+  return p.join(' + ')||'Sin equipaje';
+}
 
 function renderListTab(app,cats,total,done){
   cfg.listEdits = cfg.listEdits || {removed:{},qty:{},custom:[]};
@@ -1059,7 +1101,7 @@ function renderListTab(app,cats,total,done){
     app.appendChild(rc);
   }
   // peso estimado del equipaje
-  const cap = LUGGAGE_CAP[cfg.equipaje]||23;
+  const cap = equipajeCapacity(cfg)||23;
   const kg = totalWeight(cats)/1000;
   const pct = Math.min(100, Math.round(kg/cap*100));
   const over = kg>cap;
@@ -1067,7 +1109,7 @@ function renderListTab(app,cats,total,done){
   wc.innerHTML=`<h3 style="color:var(--accent);margin:0 0 8px">⚖️ Peso estimado</h3>
     <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
       <b style="font-size:26px">${kg.toFixed(1)} kg</b>
-      <span class="muted">de ~${cap} kg · ${equipajeLabel(cfg.equipaje)}</span>
+      <span class="muted">de ~${cap} kg · ${equipajeLabel(cfg)}</span>
     </div>
     <div class="progress"><i style="width:${pct}%${over?';background:var(--warn)':''}"></i></div>
     <small class="muted">${over?'⚠️ Te estás pasando del límite estimado — revisá qué sacar.':'Estimación aproximada según prendas típicas · '+total+' ítems.'}</small>`;
