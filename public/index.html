@@ -173,6 +173,7 @@ function newConfig(){
     id:'t'+Date.now(),
     nombre:'',
     tipos:[],                 // playa, nieve, ciudad, naturaleza, turismo
+    genero:'neutro',          // fem | masc | neutro
     dias:5,
     fechaInicio:'',
     ropaInterior:'diario',    // diario | diaPorMedio | menos
@@ -250,7 +251,7 @@ const ACT_NOCHE = [
 const DOCS = ['DNI/Pasaporte','Tarjetas','Pasajes / reservas','Seguro de viaje','Licencia de conducir','Efectivo / cambio','Vacunas / certificados'];
 
 const steps = [
-  stepTipos, stepDias, stepRopaInterior, stepDeporte, stepMotivo,
+  stepTipos, stepGenero, stepDias, stepRopaInterior, stepDeporte, stepMotivo,
   stepSalidas, stepEquipaje, stepDestino, stepDiaXdia, stepAccesorios, stepDocs
 ];
 
@@ -392,6 +393,16 @@ function stepDias(c){
     note.textContent='Tip: cargar las fechas también mejora el pronóstico del clima.';
     c.appendChild(note);
   }
+}
+
+function stepGenero(c){
+  c.insertAdjacentHTML('beforeend','<h1>¿Para quién es la valija?</h1><p class="sub">Para ajustar algunas prendas (blusas, vestidos, etc.). Si preferís, dejalo neutro.</p>');
+  const opts=[
+    {k:'fem',ic:'👩',t:'Mujer',s:'Blusas, vestidos, pollera'},
+    {k:'masc',ic:'👨',t:'Hombre',s:'Camisas, pantalones'},
+    {k:'neutro',ic:'🧑',t:'Prefiero no especificar',s:'Prendas neutras'},
+  ];
+  c.appendChild(radioOpts(opts,'genero'));
 }
 
 function stepRopaInterior(c){
@@ -702,6 +713,7 @@ function computeList(t){
   const bandCold = tempBand({max:maxCold});  // banda fría (para abrigo)
   const has=k=>t.tipos.includes(k);
   const laundry = t.ropaInterior!=='diario';
+  const gen = t.genero||'neutro';
   const items=[];
   const add=(cat,name,qty,why)=>{ items.push({cat,name,qty,why}); };
 
@@ -719,6 +731,7 @@ function computeList(t){
   if(t.motivo!=='trabajo' && (has('playa')||band==='caluroso'||band==='calido'))
     add('Ropa interior','Medias cortas / soquetes',Math.ceil(ri/2),'clima cálido');
   add('Ropa interior','Pijama',days>4?2:1,'para dormir');
+  if(gen==='fem') add('Ropa interior','Corpiños',Math.max(2,Math.ceil(ri/2)+1),'');
 
   // ---- Parte superior ----
   const topsBase = laundry ? qtyByCycle(days,'diaPorMedio')+1 : days; // remeras
@@ -735,6 +748,8 @@ function computeList(t){
   add('Ropa','Pantalones largos',Math.max(2,Math.ceil(days/4)), bandCold==='muyFrio'||has('nieve')?'también para el frío':'para salir / fresco de noche');
   if(t.motivo==='ocio' && (has('ciudad')||has('turismo')))
     add('Ropa','Jean / pantalón casual',1,'versátil para todo');
+  if(gen==='fem' && (t.salidas!=='no' || t.motivo!=='trabajo'))
+    add('Ropa','Vestido / pollera', t.salidas==='varias'?2:1,'para salir o pasear');
 
   // ---- Abrigo según el destino más frío ----
   if(bandCold==='muyFrio'||has('nieve')){
@@ -783,8 +798,8 @@ function computeList(t){
   // ---- Trabajo ----
   if(t.motivo==='trabajo'||t.motivo==='ambos'){
     const labDays = t.motivo==='trabajo'? days : Math.ceil(days/2);
-    add('Trabajo','Camisas / blusas',Math.max(2,Math.ceil(labDays/2)),'reuniones');
-    add('Trabajo','Pantalón / pollera formal',Math.max(1,Math.ceil(labDays/3)),'oficina');
+    add('Trabajo', gen==='fem'?'Blusas':gen==='masc'?'Camisas':'Camisas / blusas', Math.max(2,Math.ceil(labDays/2)),'reuniones');
+    add('Trabajo', gen==='fem'?'Pollera / pantalón formal':'Pantalón formal', Math.max(1,Math.ceil(labDays/3)),'oficina');
     add('Trabajo','Blazer / saco',1,'formal');
     add('Trabajo','Notebook + cargador',1,'trabajo');
   }
@@ -826,6 +841,44 @@ function computeList(t){
   const ordered = order.filter(o=>cats[o]).map(o=>({cat:o,items:cats[o]}));
   Object.keys(cats).filter(k=>!order.includes(k)).forEach(k=>ordered.push({cat:k,items:cats[k]}));
   return ordered;
+}
+
+// Peso estimado por ítem (gramos), por palabras clave. Aproximado.
+function itemWeight(name){
+  const n=(name||'').toLowerCase();
+  const W=[
+    [/notebook|laptop/,1800],
+    [/campera abrigada|campera.*nieve|nieve.*campera/,900],
+    [/pantal[oó]n de nieve/,750],
+    [/bota|borceg/,1100],
+    [/calzado para salir|zapato|calzado.*formal/,800],
+    [/zapatilla/,700],
+    [/ojota|sandalia/,250],
+    [/yerba/,1000],[/termo/,600],[/toalla/,500],[/c[aá]mara/,500],
+    [/blazer|saco/,700],
+    [/campera|abrigo|piloto|impermeable|rompevientos/,500],
+    [/buzo|sweater|s[uú]eter/,400],
+    [/jean|pantal[oó]n|pollera/,450],
+    [/vestido/,320],
+    [/camisa|blusa/,250],
+    [/conjunto deportivo|outfit/,400],
+    [/pijama/,250],
+    [/short|bermuda/,200],
+    [/manga larga/,200],
+    [/t[eé]rmica|primera piel/,180],
+    [/protector solar|shampoo|acondicionador|jab[oó]n|gel de ba|crema|neceser|botiqu[ií]n|perfume/,300],
+    [/mate|paraguas|power bank|cargador|libro|adaptador|candado/,250],
+    [/remera|top|musculosa|dry-fit|malla|traje de ba[ñn]o|pareo|salida de ba[ñn]o/,150],
+    [/gorro|guante|bufanda|cuello|gorra|sombrero|antiparra/,110],
+    [/lentes|desodorante|cepillo|placa|auriculares|botella|soquete|medias t[eé]rmicas|media|ropa interior|corpi[ñn]o/,60],
+    [/dni|pasaporte|tarjeta|pasaje|seguro|licencia|efectivo|vacuna|documento|reserva/,40],
+  ];
+  for(const [re,g] of W){ if(re.test(n)) return g; }
+  return 200;
+}
+const LUGGAGE_CAP={carryon:10,mochila:8,valija:23,valijaCarry:33,valijaCarryMochila:41,combo:33};
+function totalWeight(cats){
+  let g=0; cats.forEach(c=>c.items.forEach(it=>{ g+=itemWeight(it.name)*(it.qty||1); })); return g;
 }
 
 /* ====================================================================
@@ -935,6 +988,7 @@ function renderResult(app){
         ${cfg.ciudad?`<span class="s">📍 ${cfg.ciudad}</span>`:''}
         ${w?`<span class="s">🌡️ ${w.min}°/${w.max}°</span>`:''}
         <span class="s">${equipajeLabel(cfg.equipaje)}</span>
+        <span class="s">⚖️ ${(totalWeight(cats)/1000).toFixed(1)} kg</span>
       </div></div></div>`;
   const edit=el('button','btn ghost sm'); edit.textContent='✏️ Editar respuestas';
   edit.onclick=()=>{ cfg._result=false; stepIdx=0; render(); };
@@ -956,13 +1010,20 @@ function equipajeLabel(e){return {carryon:'🎒 Carry-on',mochila:'🥾 Mochila'
 function renderListTab(app,cats,total,done){
   cfg.listEdits = cfg.listEdits || {removed:{},qty:{},custom:[]};
   const ed=cfg.listEdits;
-  // aviso de espacio
-  if(cfg.equipaje==='carryon'||cfg.equipaje==='mochila'){
-    if(total>34){ const a=el('div','card'); a.style.borderColor='var(--warn)';
-      a.innerHTML=`<b>⚠️ Ojo con el espacio</b><p class="sub" style="margin:.4em 0 0">Son ${total} ítems para ${equipajeLabel(cfg.equipaje)}. Quizá convenga reducir mudas o lavar más seguido.</p>`;
-      app.appendChild(a);
-    }
-  }
+  // peso estimado del equipaje
+  const cap = LUGGAGE_CAP[cfg.equipaje]||23;
+  const kg = totalWeight(cats)/1000;
+  const pct = Math.min(100, Math.round(kg/cap*100));
+  const over = kg>cap;
+  const wc=el('div','card');
+  wc.innerHTML=`<h3 style="color:var(--accent);margin:0 0 8px">⚖️ Peso estimado</h3>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+      <b style="font-size:26px">${kg.toFixed(1)} kg</b>
+      <span class="muted">de ~${cap} kg · ${equipajeLabel(cfg.equipaje)}</span>
+    </div>
+    <div class="progress"><i style="width:${pct}%${over?';background:var(--warn)':''}"></i></div>
+    <small class="muted">${over?'⚠️ Te estás pasando del límite estimado — revisá qué sacar.':'Estimación aproximada según prendas típicas · '+total+' ítems.'}</small>`;
+  app.appendChild(wc);
   const tip=el('p','muted'); tip.style.cssText='font-size:13px;margin:0 2px 12px';
   tip.textContent='Tocá ✓ para marcar · usá − / + para la cantidad · ✕ para eliminar.';
   app.appendChild(tip);
